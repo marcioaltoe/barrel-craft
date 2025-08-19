@@ -103,6 +103,11 @@ export class BarrelGenerator {
     if (this.shouldIncludeSubdirectories()) {
       const subdirs = await this.findSubdirectories(directory)
       for (const subdir of subdirs) {
+        // Skip subdirectories that are in forceGenerate list
+        // They will be processed separately with recursive generation
+        if (this.isForceGenerateDirectory(subdir)) {
+          continue
+        }
         const result = await this.generateBarrelForDirectory(subdir, mode)
         if (result) results.push(result)
       }
@@ -136,8 +141,8 @@ export class BarrelGenerator {
       }
     }
 
-    // Filter valid source files
-    const validFiles = files.filter((file) => this.isValidSourceFile(file.name))
+    // Files are already filtered in getDirsAndFiles
+    const validFiles = files
 
     // Generate barrel if we have content or valid subdirectories
     if (validFiles.length > 0 || validSubDirs.length > 0) {
@@ -418,7 +423,6 @@ export class BarrelGenerator {
     const normalizedPath = path.normalize(dirPath)
     const relativePath = path.relative(process.cwd(), normalizedPath)
     
-    
     return this.fileConfig.forceGenerate.some((pattern) => {
       // Test both relative and absolute paths with different variations
       const pathsToTest = [
@@ -434,7 +438,9 @@ export class BarrelGenerator {
       
       return pathsToTest.some(testPath => {
         // Direct match
-        if (testPath === pattern) return true
+        if (testPath === pattern) {
+          return true
+        }
         
         // Pattern ends with the directory name (relative match)
         const dirBasename = path.basename(normalizedPath)
