@@ -1,1 +1,1 @@
-export interface ProductRepository {}
+export type ProductRepository = {}

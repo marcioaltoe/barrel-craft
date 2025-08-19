@@ -62,7 +62,13 @@
   },
   "overrides": [
     {
-      "includes": ["**/node_modules/**", "**/dist/**", "**/coverage/**", "**/*.lock"],
+      "includes": [
+        "**/node_modules/**",
+        "**/example/**",
+        "**/dist/**",
+        "**/coverage/**",
+        "**/*.lock"
+      ],
       "linter": {
         "enabled": false
       },

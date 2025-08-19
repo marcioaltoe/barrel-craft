@@ -1,1 +1,1 @@
-export interface UserRepository {}
+export type UserRepository = {}
