@@ -1,0 +1,55 @@
+{
+  "name": "barrel-buddy",
+  "version": "0.1.0",
+  "description": "Generate clean and consistent barrels (index.ts and index.tsx files) for your TypeScript and React projects with a single command",
+  "license": "MIT",
+  "author": "Marcio",
+  "main": "dist/index.js",
+  "bin": {
+    "barrel-buddy": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun run clean && bun run compile",
+    "clean": "rm -rf dist",
+    "compile": "tsc",
+    "dev": "bun run --watch src/cli.ts",
+    "format": "biome format --write . && bun run format:md && bun run format:pkg",
+    "format:md": "prettier --write '**/*.md' --log-level error",
+    "format:pkg": "prettier-package-json --write package.json --log-level error",
+    "lint": "biome check --write .",
+    "lint:fix": "biome check --write . --unsafe",
+    "prepublishOnly": "bun run build && bun run test && bun run lint",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^14.0.0",
+    "glob": "^11.0.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/node": "^24.3.0",
+    "@vitest/ui": "^3.2.4",
+    "prettier": "^3.6.2",
+    "prettier-package-json": "^2.8.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "barrel",
+    "cli",
+    "code-generation",
+    "index",
+    "react",
+    "tools",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
