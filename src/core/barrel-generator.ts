@@ -233,7 +233,10 @@ export class BarrelGenerator {
     }
   }
 
-  private async getEligibleFiles(directory: string, includeSubdirectories: boolean = false): Promise<FileInfo[]> {
+  private async getEligibleFiles(
+    directory: string,
+    includeSubdirectories: boolean = false,
+  ): Promise<FileInfo[]> {
     const patterns = this.getExtensions().map((ext) => `*.${ext}`)
     const files: FileInfo[] = []
 
@@ -269,7 +272,7 @@ export class BarrelGenerator {
       for (const entry of entries) {
         if (entry.isDirectory() && !entry.name.startsWith('.')) {
           const subdirPath = path.join(directory, entry.name)
-          
+
           // Skip if subdirectory is excluded
           if (this.isExcluded(subdirPath)) continue
 
@@ -294,12 +297,12 @@ export class BarrelGenerator {
     try {
       const indexTs = path.join(directory, 'index.ts')
       const indexTsx = path.join(directory, 'index.tsx')
-      
+
       const [hasTs, hasTsx] = await Promise.all([
         this.fileExists(indexTs),
         this.fileExists(indexTsx),
       ])
-      
+
       return hasTs || hasTsx
     } catch {
       return false
@@ -360,7 +363,7 @@ export class BarrelGenerator {
     for (const entry of entries) {
       if (entry.isDirectory() && !entry.name.startsWith('.')) {
         const subdirPath = path.join(directory, entry.name)
-        
+
         // Skip if subdirectory is excluded
         if (this.isExcluded(subdirPath)) {
           if (this.config.verbose) {
@@ -368,7 +371,7 @@ export class BarrelGenerator {
           }
           continue
         }
-        
+
         const nestedSubdirs = await this.findSubdirectories(subdirPath)
         subdirs.push(...nestedSubdirs)
       }
@@ -395,34 +398,34 @@ export class BarrelGenerator {
   private isExcluded(dirPath: string): boolean {
     const patterns = this.fileConfig?.exclude || this.config.excludePatterns
     const normalizedPath = path.normalize(dirPath)
-    
+
     // Convert to relative path from current working directory for pattern matching
     const relativePath = path.relative(process.cwd(), normalizedPath)
-    
+
     // Test both relative and absolute paths with different variations
     const pathsToTest = [
       relativePath,
       relativePath + path.sep,
       // Also test with forward slashes normalized
       relativePath.replace(/\\/g, '/'),
-      relativePath.replace(/\\/g, '/') + '/',
+      `${relativePath.replace(/\\/g, '/')}/`,
       normalizedPath,
-      normalizedPath + path.sep
+      normalizedPath + path.sep,
     ]
-    
+
     return patterns.some((pattern) => {
-      return pathsToTest.some(testPath => 
-        minimatch(testPath, pattern, { dot: true, nocase: true })
+      return pathsToTest.some((testPath) =>
+        minimatch(testPath, pattern, { dot: true, nocase: true }),
       )
     })
   }
 
   private isForceGenerateDirectory(dirPath: string): boolean {
     if (!this.fileConfig) return false
-    
+
     const normalizedPath = path.normalize(dirPath)
     const relativePath = path.relative(process.cwd(), normalizedPath)
-    
+
     return this.fileConfig.forceGenerate.some((pattern) => {
       // Test both relative and absolute paths with different variations
       const pathsToTest = [
@@ -430,25 +433,18 @@ export class BarrelGenerator {
         relativePath + path.sep,
         // Also test with forward slashes normalized
         relativePath.replace(/\\/g, '/'),
-        relativePath.replace(/\\/g, '/') + '/',
+        `${relativePath.replace(/\\/g, '/')}/`,
         normalizedPath,
-        normalizedPath + path.sep
+        normalizedPath + path.sep,
       ]
-      
-      
-      return pathsToTest.some(testPath => {
-        // Direct match
-        if (testPath === pattern) {
+
+      return pathsToTest.some((testPath) => {
+        // Direct match - exact path comparison
+        if (testPath === pattern || testPath === `${pattern}/` || `${testPath}/` === pattern) {
           return true
         }
-        
-        // Pattern ends with the directory name (relative match)
-        const dirBasename = path.basename(normalizedPath)
-        if (pattern.endsWith('/' + dirBasename) || pattern.endsWith(dirBasename)) {
-          return true
-        }
-        
-        // Use minimatch for pattern matching (same as exclude logic)
+
+        // Use minimatch for pattern matching (supports wildcards)
         return minimatch(testPath, pattern, { dot: true, nocase: true })
       })
     })
@@ -506,15 +502,19 @@ export class BarrelGenerator {
     }
 
     if (!this.fileConfig) {
-      throw new Error('No configuration found. Please run "barrel-craft init" or specify a config file.')
+      throw new Error(
+        'No configuration found. Please run "barrel-craft init" or specify a config file.',
+      )
     }
 
     const shouldForce = forceClean || this.fileConfig.force
     const expectedHeader = this.fileConfig.headerComment.trim()
-    
+
     console.log(`🧹 ${dryRun ? 'Analyzing' : 'Cleaning'} old barrel files...`)
     if (shouldForce) {
-      console.log('⚠️  Force mode enabled - will remove ALL index.ts/tsx files in target directories')
+      console.log(
+        '⚠️  Force mode enabled - will remove ALL index.ts/tsx files in target directories',
+      )
     } else {
       console.log(`📝 Only removing files with matching header comment`)
     }
@@ -541,10 +541,10 @@ export class BarrelGenerator {
     expectedHeader: string,
     forceClean: boolean,
     dryRun: boolean,
-    onCleaned: (count: number) => void
+    onCleaned: (count: number) => void,
   ): Promise<void> {
     const resolvedPath = path.resolve(targetPath)
-    
+
     try {
       await fs.access(resolvedPath)
     } catch {
@@ -552,25 +552,19 @@ export class BarrelGenerator {
     }
 
     const entries = await fs.readdir(resolvedPath, { withFileTypes: true })
-    
+
     for (const entry of entries) {
       const fullPath = path.join(resolvedPath, entry.name)
-      
+
       if (entry.isDirectory()) {
         // Recursively clean subdirectories
-        await this.cleanDirectoryBarrels(
-          fullPath,
-          expectedHeader,
-          forceClean,
-          dryRun,
-          onCleaned
-        )
+        await this.cleanDirectoryBarrels(fullPath, expectedHeader, forceClean, dryRun, onCleaned)
       } else if (entry.name === 'index.ts' || entry.name === 'index.tsx') {
         const shouldClean = await this.shouldCleanBarrelFile(fullPath, expectedHeader, forceClean)
-        
+
         if (shouldClean) {
           console.log(`${dryRun ? '📄' : '🗑️'} ${fullPath}`)
-          
+
           if (!dryRun) {
             await fs.unlink(fullPath)
           }
@@ -582,30 +576,32 @@ export class BarrelGenerator {
 
   private isValidBarrelFile(content: string): boolean {
     const lines = content.split('\n')
-    
+
     for (const line of lines) {
       const trimmedLine = line.trim()
-      
+
       // Skip empty lines
       if (!trimmedLine) continue
-      
+
       // Allow comments (single-line and multi-line start/end)
-      if (trimmedLine.startsWith('//') || 
-          trimmedLine.startsWith('/*') || 
-          trimmedLine.startsWith('*') || 
-          trimmedLine.endsWith('*/')) {
+      if (
+        trimmedLine.startsWith('//') ||
+        trimmedLine.startsWith('/*') ||
+        trimmedLine.startsWith('*') ||
+        trimmedLine.endsWith('*/')
+      ) {
         continue
       }
-      
+
       // Allow export statements
       if (trimmedLine.startsWith('export ')) {
         continue
       }
-      
+
       // If we find any other type of code, it's not a pure barrel file
       return false
     }
-    
+
     // Must have at least one export statement to be considered a barrel
     return content.includes('export ')
   }
@@ -613,32 +609,33 @@ export class BarrelGenerator {
   private async shouldCleanBarrelFile(
     filePath: string,
     expectedHeader: string,
-    forceClean: boolean
+    forceClean: boolean,
   ): Promise<boolean> {
     try {
       const content = await fs.readFile(filePath, 'utf8')
-      
+
       // Always validate if it's a genuine barrel file
       if (!this.isValidBarrelFile(content)) {
         return false // Not a barrel file, don't clean it
       }
-      
+
       if (forceClean) {
         return true // It's a barrel file and force is enabled
       }
 
       const firstLine = content.split('\n')[0]?.trim() || ''
-      
+
       // Check if first line contains expected header comment pattern
       // Remove both "// " prefixes to compare core content
-      const normalizeComment = (comment: string) => 
-        comment.replace(/^\/\/ /, '').trim()
-      
+      const normalizeComment = (comment: string) => comment.replace(/^\/\/ /, '').trim()
+
       const normalizedExpected = normalizeComment(expectedHeader.split('\n')[0] || '')
       const normalizedFirst = normalizeComment(firstLine)
-      
-      return normalizedFirst.includes('auto-generated') && 
-             (normalizedFirst.includes(normalizedExpected) || normalizedExpected === '')
+
+      return (
+        normalizedFirst.includes('auto-generated') &&
+        (normalizedFirst.includes(normalizedExpected) || normalizedExpected === '')
+      )
     } catch {
       return false // If can't read file, don't clean it
     }

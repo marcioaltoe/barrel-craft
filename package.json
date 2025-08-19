@@ -12,10 +12,11 @@
   "bugs": {
     "url": "https://github.com/marcioaltoe/barrel-craft/issues"
   },
+  "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "barrel-craft": "dist/cli.js",
     "barrel": "dist/cli.js",
+    "barrel-craft": "dist/cli.js",
     "craft": "dist/cli.js"
   },
   "files": [
@@ -39,7 +40,7 @@
     "test:coverage:ui": "vitest --ui --coverage",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "type-check": "tsc --noEmit"
   },
   "types": "dist/index.d.ts",
   "dependencies": {
