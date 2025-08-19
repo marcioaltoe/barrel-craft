@@ -191,7 +191,7 @@ interface FileConfig {
 The pattern expander handles complex scenarios:
 
 - Single patterns: `{auth|dashboard}` → `["auth", "dashboard"]`
-- Multiple patterns: `apps/{front|nexus}/src/{auth|dashboard}` → 4 combinations
+- Multiple patterns: `apps/{frontend|backend}/src/{auth|dashboard}` → 4 combinations
 - Nested expansion: Processes patterns recursively for multiple variables
 
 ### Testing Strategy

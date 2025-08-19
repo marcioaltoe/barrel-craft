@@ -48,6 +48,14 @@ export class BarrelGenerator {
 
     // If we have file config, use its target directories
     if (this.fileConfig) {
+      // Check if this specific directory should use forceGenerate mode
+      if (this.isForceGenerateDirectory(resolvedDir)) {
+        // Directory is in forceGenerate list - use forced mode
+        const forceResults = await this.processForceGenerateDirectory(resolvedDir)
+        results.push(...forceResults)
+        return results // Return early if processing specific forceGenerate directory
+      }
+
       // Process target directories (normal mode)
       for (const target of this.fileConfig.targets) {
         const targetPath = path.resolve(target)
@@ -66,7 +74,7 @@ export class BarrelGenerator {
         }
       }
     } else {
-      // Original logic for CLI usage
+      // Original logic for CLI usage without config file
       if (this.shouldIncludeSubdirectories()) {
         const subdirs = await this.findSubdirectories(resolvedDir)
         for (const subdir of subdirs) {
@@ -151,7 +159,10 @@ export class BarrelGenerator {
     directory: string,
     mode: 'normal' | 'forced',
   ): Promise<BarrelGenerationResult | null> {
-    const files = await this.getEligibleFiles(directory)
+    // For normal mode: only include files, not subdirectories
+    // For forced mode: include subdirectories (used by forceGenerate)
+    const includeSubdirectories = mode === 'forced'
+    const files = await this.getEligibleFiles(directory, includeSubdirectories)
 
     if (files.length === 0 && mode === 'normal') {
       return null
@@ -217,7 +228,7 @@ export class BarrelGenerator {
     }
   }
 
-  private async getEligibleFiles(directory: string): Promise<FileInfo[]> {
+  private async getEligibleFiles(directory: string, includeSubdirectories: boolean = false): Promise<FileInfo[]> {
     const patterns = this.getExtensions().map((ext) => `*.${ext}`)
     const files: FileInfo[] = []
 
@@ -247,24 +258,26 @@ export class BarrelGenerator {
       }
     }
 
-    // Include subdirectories that contain barrel files
-    const entries = await fs.readdir(directory, { withFileTypes: true })
-    for (const entry of entries) {
-      if (entry.isDirectory() && !entry.name.startsWith('.')) {
-        const subdirPath = path.join(directory, entry.name)
-        
-        // Skip if subdirectory is excluded
-        if (this.isExcluded(subdirPath)) continue
+    // Include subdirectories that contain barrel files ONLY if includeSubdirectories is true
+    if (includeSubdirectories) {
+      const entries = await fs.readdir(directory, { withFileTypes: true })
+      for (const entry of entries) {
+        if (entry.isDirectory() && !entry.name.startsWith('.')) {
+          const subdirPath = path.join(directory, entry.name)
+          
+          // Skip if subdirectory is excluded
+          if (this.isExcluded(subdirPath)) continue
 
-        // Check if subdirectory has a barrel file
-        const hasBarrel = await this.hasBarrelFile(subdirPath)
-        if (hasBarrel) {
-          files.push({
-            path: subdirPath,
-            name: entry.name,
-            extension: '',
-            isDirectory: true,
-          })
+          // Check if subdirectory has a barrel file
+          const hasBarrel = await this.hasBarrelFile(subdirPath)
+          if (hasBarrel) {
+            files.push({
+              path: subdirPath,
+              name: entry.name,
+              extension: '',
+              isDirectory: true,
+            })
+          }
         }
       }
     }
@@ -399,6 +412,42 @@ export class BarrelGenerator {
     })
   }
 
+  private isForceGenerateDirectory(dirPath: string): boolean {
+    if (!this.fileConfig) return false
+    
+    const normalizedPath = path.normalize(dirPath)
+    const relativePath = path.relative(process.cwd(), normalizedPath)
+    
+    
+    return this.fileConfig.forceGenerate.some((pattern) => {
+      // Test both relative and absolute paths with different variations
+      const pathsToTest = [
+        relativePath,
+        relativePath + path.sep,
+        // Also test with forward slashes normalized
+        relativePath.replace(/\\/g, '/'),
+        relativePath.replace(/\\/g, '/') + '/',
+        normalizedPath,
+        normalizedPath + path.sep
+      ]
+      
+      
+      return pathsToTest.some(testPath => {
+        // Direct match
+        if (testPath === pattern) return true
+        
+        // Pattern ends with the directory name (relative match)
+        const dirBasename = path.basename(normalizedPath)
+        if (pattern.endsWith('/' + dirBasename) || pattern.endsWith(dirBasename)) {
+          return true
+        }
+        
+        // Use minimatch for pattern matching (same as exclude logic)
+        return minimatch(testPath, pattern, { dot: true, nocase: true })
+      })
+    })
+  }
+
   private async directoryExists(dirPath: string): Promise<boolean> {
     try {
       const stats = await fs.stat(dirPath)
@@ -525,17 +574,53 @@ export class BarrelGenerator {
     }
   }
 
+  private isValidBarrelFile(content: string): boolean {
+    const lines = content.split('\n')
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim()
+      
+      // Skip empty lines
+      if (!trimmedLine) continue
+      
+      // Allow comments (single-line and multi-line start/end)
+      if (trimmedLine.startsWith('//') || 
+          trimmedLine.startsWith('/*') || 
+          trimmedLine.startsWith('*') || 
+          trimmedLine.endsWith('*/')) {
+        continue
+      }
+      
+      // Allow export statements
+      if (trimmedLine.startsWith('export ')) {
+        continue
+      }
+      
+      // If we find any other type of code, it's not a pure barrel file
+      return false
+    }
+    
+    // Must have at least one export statement to be considered a barrel
+    return content.includes('export ')
+  }
+
   private async shouldCleanBarrelFile(
     filePath: string,
     expectedHeader: string,
     forceClean: boolean
   ): Promise<boolean> {
-    if (forceClean) {
-      return true
-    }
-
     try {
       const content = await fs.readFile(filePath, 'utf8')
+      
+      // Always validate if it's a genuine barrel file
+      if (!this.isValidBarrelFile(content)) {
+        return false // Not a barrel file, don't clean it
+      }
+      
+      if (forceClean) {
+        return true // It's a barrel file and force is enabled
+      }
+
       const firstLine = content.split('\n')[0]?.trim() || ''
       
       // Check if first line contains expected header comment pattern

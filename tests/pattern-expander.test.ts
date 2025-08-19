@@ -17,14 +17,14 @@ describe('expandVariablePatterns', () => {
   })
 
   it('should expand multiple variable patterns in same path', () => {
-    const paths = ['apps/{front|nexus}/src/{auth|dashboard}']
+    const paths = ['apps/{frontend|backend}/src/{auth|dashboard}']
     const result = expandVariablePatterns(paths)
 
     expect(result).toEqual([
-      'apps/front/src/auth',
-      'apps/front/src/dashboard',
-      'apps/nexus/src/auth',
-      'apps/nexus/src/dashboard',
+      'apps/frontend/src/auth',
+      'apps/frontend/src/dashboard',
+      'apps/backend/src/auth',
+      'apps/backend/src/dashboard',
     ])
   })
 

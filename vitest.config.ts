@@ -2,17 +2,24 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    globals: true,
-    environment: 'node',
     coverage: {
-      reporter: ['text', 'json', 'html'],
+      provider: 'v8',
+      reporter: ['text', 'html', 'json'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
-        'node_modules/',
-        'dist/',
+        '**/node_modules/**',
+        '**/dist/**',
         '**/*.d.ts',
-        '**/*.config.*',
-        'src/cli.ts', // CLI entry point excluded from coverage
+        '**/*.test.{ts,tsx}',
+        '**/*.spec.{ts,tsx}',
       ],
+      thresholds: {
+        functions: 85,
+        branches: 85,
+        lines: 85,
+        statements: 85,
+      },
     },
   },
 })

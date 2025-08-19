@@ -65,6 +65,9 @@ describe('config-loader', () => {
         exclude: ['**/*.test.*', '**/*.spec.*', '**/*.d.ts'],
         extensions: ['ts', 'tsx'],
         sortExports: true,
+        subdirectories: true,
+        verbose: false,
+        force: false,
       })
     })
 
@@ -77,6 +80,9 @@ describe('config-loader', () => {
         exclude: ['**/*.test.*'],
         extensions: ['ts'],
         sortExports: false,
+        subdirectories: true,
+        verbose: false,
+        force: false,
       }
 
       await fs.writeFile(configPath, JSON.stringify(configData))

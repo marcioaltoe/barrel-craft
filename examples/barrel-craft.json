@@ -1,0 +1,24 @@
+{
+  "headerComment": "// Auto-generated barrel file\\n\\n",
+  "targets": [
+    "frontend/src",
+    "backend/src"
+  ],
+  "forceGenerate": [
+    "frontend/src/components/composite",
+    "frontend/src/services/storage",
+    "backend/src/domain/ports",
+    "backend/src/application/use-cases"
+  ],
+  "exclude": [
+    "**/__tests__/**",
+    "**/components/ui/**",
+    "**/*.test.*",
+    "**/*.spec.*"
+  ],
+  "extensions": ["ts", "tsx"],
+  "sortExports": true,
+  "subdirectories": true,
+  "verbose": false,
+  "force": false
+}

@@ -35,3 +35,4 @@ npm-debug.log*
 barrel-craft.*.json
 barrel-craft.json
 !barrel-craft.example.json
+!examples/barrel-craft.json

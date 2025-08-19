@@ -35,6 +35,8 @@
     "package:test": "bun run build && npm pack",
     "prepublishOnly": "bun run build && bun run test && bun run lint",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:ui": "vitest --ui --coverage",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -48,6 +50,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
     "@types/node": "^24.3.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "prettier": "^3.6.2",
     "prettier-package-json": "^2.8.0",
