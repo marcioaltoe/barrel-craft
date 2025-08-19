@@ -5,6 +5,9 @@ bun.lockb
 # Build output
 dist/
 
+# Package
+*.tgz
+
 # Testing
 coverage/
 
@@ -23,3 +26,12 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Cache
+.cache/
+.serena/cache/
+
+# Test JSON files
+barrel-craft.*.json
+barrel-craft.json
+!barrel-craft.example.json

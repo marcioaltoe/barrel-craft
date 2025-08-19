@@ -1,12 +1,22 @@
 {
-  "name": "barrel-buddy",
+  "name": "barrel-craft",
   "version": "0.1.0",
   "description": "Generate clean and consistent barrels (index.ts and index.tsx files) for your TypeScript and React projects with a single command",
   "license": "MIT",
-  "author": "Marcio",
+  "author": "Marcio Altoé",
+  "homepage": "https://github.com/marcioaltoe/barrel-craft",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marcioaltoe/barrel-craft"
+  },
+  "bugs": {
+    "url": "https://github.com/marcioaltoe/barrel-craft/issues"
+  },
   "main": "dist/index.js",
   "bin": {
-    "barrel-buddy": "dist/cli.js"
+    "barrel-craft": "dist/cli.js",
+    "barrel": "dist/cli.js",
+    "craft": "dist/cli.js"
   },
   "files": [
     "dist"
@@ -21,15 +31,19 @@
     "format:pkg": "prettier-package-json --write package.json --log-level error",
     "lint": "biome check --write .",
     "lint:fix": "biome check --write . --unsafe",
+    "package": "npm pack",
+    "package:test": "bun run build && npm pack",
     "prepublishOnly": "bun run build && bun run test && bun run lint",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
+  "types": "dist/index.d.ts",
   "dependencies": {
     "commander": "^14.0.0",
-    "glob": "^11.0.3"
+    "glob": "^11.0.3",
+    "minimatch": "^10.0.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",

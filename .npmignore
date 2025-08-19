@@ -1,0 +1,36 @@
+# Source files (only dist should be published)
+src/
+tests/
+*.test.ts
+*.spec.ts
+
+# Development files
+tsconfig.json
+biome.json
+.prettierrc
+.prettierignore
+bun.lockb
+
+# Testing and coverage
+coverage/
+.nyc_output/
+
+# Environment files
+.env*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Development configs
+vitest.config.ts
