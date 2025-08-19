@@ -6,9 +6,8 @@
   ],
   "forceGenerate": [
     "frontend/src/components/composite",
-    "frontend/src/services/storage",
-    "backend/src/domain/ports",
-    "backend/src/application/use-cases"
+    "frontend/src/services",
+    "backend/src/domain/ports"
   ],
   "exclude": [
     "**/__tests__/**",
