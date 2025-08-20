@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Release and Publish
 
 on:
   push:
@@ -6,13 +6,15 @@ on:
       - 'v*'
 
 jobs:
-  publish:
+  release-and-publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write  # Needed for creating releases
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for changelog
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -34,7 +36,48 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Extract version and changelog
+        id: extract
+        run: |
+          # Get version from tag
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Extract changelog for this version
+          CHANGELOG=$(awk "/## \[$VERSION\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md | sed '/^$/d')
+          
+          # If no specific changelog found, get commits since last tag
+          if [ -z "$CHANGELOG" ]; then
+            PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -z "$PREV_TAG" ]; then
+              CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+            else
+              CHANGELOG=$(git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+            fi
+          fi
+          
+          # Save to file for release body
+          echo "$CHANGELOG" > release_notes.md
+          echo "Changelog extracted for version $VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.extract.outputs.version }}
+          tag_name: ${{ github.ref }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+
       - name: Publish to npm
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Post-publish notification
+        if: success()
+        run: |
+          echo "🎉 Successfully published barrel-craft@${{ steps.extract.outputs.version }} to npm!"
+          echo "📦 View on npm: https://www.npmjs.com/package/barrel-craft"
+          echo "🏷️ View release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.extract.outputs.version }}"
