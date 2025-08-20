@@ -1,40 +1,10 @@
-# Repository Setup Guide
+# Repository Setup Guide - Plano Gratuito
 
-## 1. Branch Protection Rules
-
-### Configure Main Branch Protection
-
-1. Go to **Settings** → **Branches**
-2. Click **Add rule**
-3. Branch name pattern: `main`
-4. Configure protection settings:
-
-#### Required Settings:
-
-- ✅ **Require a pull request before merging**
-  - ✅ Require approvals: 1
-  - ✅ Dismiss stale pull request approvals when new commits are pushed
-  - ✅ Require review from CODEOWNERS (optional)
-- ✅ **Require status checks to pass before merging**
-  - ✅ Require branches to be up to date before merging
-  - Add status checks:
-    - `test (18)`
-    - `test (20)`
-    - `test (22)`
-
-- ✅ **Require conversation resolution before merging**
-- ✅ **Require linear history** (optional, for cleaner git history)
-- ✅ **Include administrators** (optional, enforce for admins too)
-
-#### Allow Bypass for Bots:
-
-- ✅ **Allow specified actors to bypass**
-  - Add: `github-actions[bot]` (for Release Please)
-  - Add: Your username (for emergency fixes)
-
-## 2. GitHub Actions Permissions
+## 1. GitHub Actions Permissions (FAZER PRIMEIRO! 🚨)
 
 ### Enable GitHub Actions to Create PRs
+
+**Sem isso, Release Please não funcionará!**
 
 1. Go to **Settings** → **Actions** → **General**
 2. Scroll to **Workflow permissions**
@@ -42,193 +12,148 @@
 4. ✅ **Allow GitHub Actions to create and approve pull requests**
 5. Click **Save**
 
-### Repository Settings for Release Please
+## 2. Branch Protection Rules (Opcional para Repositório Pessoal)
+
+### Configure Main Branch Protection
+
+Para repositório pessoal com plano gratuito, recomendo configuração simplificada:
+
+1. Go to **Settings** → **Branches**
+2. Click **Add rule**
+3. Branch name pattern: `main`
+4. Configure:
+
+#### Configuração Recomendada para Repositório Pessoal:
+
+- ✅ **Require a pull request before merging**
+  - ❌ **NÃO marque** "Require approvals" (você não conseguirá aprovar seus próprios PRs)
+  - ✅ Dismiss stale pull request approvals when new commits are pushed
+  
+- ✅ **Require status checks to pass before merging**
+  - ✅ Require branches to be up to date before merging
+  - Após o primeiro CI rodar, adicione os checks:
+    - `test (18)`
+    - `test (20)` 
+    - `test (22)`
+
+- ✅ **Require conversation resolution before merging**
+- ❌ **NÃO marque** "Include administrators" (você poderá fazer merge direto se necessário)
+
+## 3. Repository Settings
+
+### General Settings
 
 1. Go to **Settings** → **General**
-2. Under **Pull Requests**, ensure:
+2. Under **Pull Requests**:
    - ✅ Allow merge commits
    - ✅ Allow squash merging
-   - ✅ Allow auto-merge
+   - ❌ Allow auto-merge (não disponível no plano gratuito)
 
-## 3. Create GitHub App Token (Optional - More Secure)
+## 4. NPM Token Setup (Obrigatório para Publicar)
 
-For better security, create a GitHub App instead of using GITHUB_TOKEN:
+1. Go to [npmjs.com](https://www.npmjs.com/) and sign in
+2. Click on your profile → **Access Tokens**
+3. **Generate New Token** → **Classic Token**
+4. Select **"Automation"** type
+5. Copy the token
+6. Go to GitHub repository → **Settings** → **Secrets and variables** → **Actions**
+7. Click **"New repository secret"**
+8. Name: `NPM_TOKEN`
+9. Value: Paste your npm token
+10. Click **"Add secret"**
 
-### Create GitHub App:
+## 5. Configuração Simplificada para Plano Gratuito
 
-1. Go to **Settings** → **Developer settings** → **GitHub Apps**
-2. Click **New GitHub App**
-3. App name: `barrel-craft-release`
-4. Homepage URL: `https://github.com/marcioaltoe/barrel-craft`
-5. Webhook: Uncheck **Active**
-6. Permissions:
-   - **Repository permissions:**
-     - Contents: Write
-     - Pull requests: Write
-     - Metadata: Read
-7. Click **Create GitHub App**
+### Resumo das Limitações e Soluções:
 
-### Install GitHub App:
+| Recurso | Plano Gratuito | Solução |
+|---------|---------------|----------|
+| Branch Protection | ✅ Disponível | Não exigir aprovações |
+| GitHub Actions | ✅ Disponível | Configurar permissões corretas |
+| Auto-merge | ❌ Não disponível | Fazer merge manual |
+| Bypass rules | ❌ Não disponível | Não necessário com permissões corretas |
+| Release Please | ✅ Funciona | Apenas configurar permissões |
 
-1. After creation, click **Install App**
-2. Select your repository
-3. Click **Install**
+## 6. Workflow para Repositório Pessoal
 
-### Generate Private Key:
+### Como trabalhar sozinho com PRs:
 
-1. In GitHub App settings, scroll to **Private keys**
-2. Click **Generate a private key**
-3. Save the `.pem` file
-
-### Add Secrets to Repository:
-
-1. Go to repository **Settings** → **Secrets and variables** → **Actions**
-2. Add secrets:
-   - `APP_ID`: Your GitHub App ID
-   - `APP_PRIVATE_KEY`: Contents of the `.pem` file
-
-## 4. Update Release Please Workflow (if using GitHub App)
-
-If using GitHub App, update `.github/workflows/release.yml`:
-
-```yaml
-name: Release Please
-
-on:
-  push:
-    branches: [main]
-
-permissions:
-  contents: write
-  pull-requests: write
-
-jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-    steps:
-      # If using GitHub App (recommended)
-      - uses: actions/create-github-app-token@v1
-        id: app-token
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
-          release-type: node
-          package-name: barrel-craft
-          changelog-types: '[
-            {"type": "feat", "section": "Features", "hidden": false},
-            {"type": "fix", "section": "Bug Fixes", "hidden": false},
-            {"type": "chore", "section": "Miscellaneous", "hidden": false},
-            {"type": "docs", "section": "Documentation", "hidden": false},
-            {"type": "style", "section": "Styles", "hidden": false},
-            {"type": "refactor", "section": "Code Refactoring", "hidden": false},
-            {"type": "perf", "section": "Performance Improvements", "hidden": false},
-            {"type": "test", "section": "Tests", "hidden": false}
-          ]'
-
-  # ... rest of the workflow remains the same
+1. **Criar feature branch:**
+```bash
+git checkout -b feat/nova-funcionalidade
+git push -u origin feat/nova-funcionalidade
 ```
 
-## 5. Configure Release Please
+2. **Criar PR no GitHub:**
+   - Vá para o repositório no GitHub
+   - Clique em "Compare & pull request"
+   - Escreva descrição
+   - Clique em "Create pull request"
 
-### Create Configuration Files
+3. **CI roda automaticamente:**
+   - Aguarde os testes passarem
+   - Verifique os logs se houver erro
 
-#### `.release-please-manifest.json`
+4. **Fazer merge (sem aprovação necessária):**
+   - Clique em "Merge pull request"
+   - Confirme o merge
 
-```json
-{
-  ".": "0.1.0"
-}
-```
+5. **Release Please cria PR automaticamente:**
+   - Aguarde alguns minutos
+   - Um PR chamado "chore(main): release X.X.X" aparecerá
+   - Revise o CHANGELOG gerado
+   - Faça merge deste PR
 
-#### `release-please-config.json`
+6. **Publicação automática no npm:**
+   - Após merge do PR de release
+   - Package é publicado automaticamente
+   - GitHub release é criado
 
-```json
-{
-  "packages": {
-    ".": {
-      "changelog-path": "CHANGELOG.md",
-      "release-type": "node",
-      "bump-minor-pre-major": false,
-      "bump-patch-for-minor-pre-major": false,
-      "draft": false,
-      "prerelease": false
-    }
-  },
-  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
-}
-```
+## 7. Configuração Inicial
 
-## 6. NPM Token Setup
-
-1. Go to [npmjs.com](https://www.npmjs.com/)
-2. Sign in → Profile → Access Tokens
-3. Generate New Token → Classic Token → Automation
-4. Copy token
-5. Go to GitHub repository → Settings → Secrets → Actions
-6. Add secret: `NPM_TOKEN` = your-token
-
-## 7. Workflow Summary
-
-After setup, your workflow will be:
-
-1. **Development:**
-   - Create feature branch: `git checkout -b feat/new-feature`
-   - Make changes and commit using conventional commits
-   - Push branch: `git push origin feat/new-feature`
-   - Create PR via GitHub
-
-2. **CI Checks:**
-   - GitHub Actions runs tests on PR
-   - Required checks must pass
-   - PR needs approval (if configured)
-
-3. **Merge:**
-   - Merge PR to main
-   - Release Please creates a release PR automatically
-
-4. **Release:**
-   - Review and merge the Release Please PR
-   - Package automatically publishes to npm
-   - GitHub release is created with changelog
-
-## 8. Initial Release
-
-For the first release after setup:
+### Primeira vez configurando:
 
 ```bash
-# Make sure everything is committed
+# 1. Push das configurações
 git add .
 git commit -m "chore: configure repository for automated releases"
 git push origin main
 
-# Create initial tag for Release Please to track
-git tag v0.1.0
+# 2. Vá para GitHub e configure:
+#    - Settings → Actions → General → Workflow permissions
+#    - Marque as duas opções mencionadas
+#    - Salve
+
+# 3. Aguarde o Release Please criar o primeiro PR
+#    (pode demorar alguns minutos)
+
+# 4. Se não criar automaticamente, force com um tag:
+git tag -a v0.1.0 -m "Initial release"
 git push origin v0.1.0
 ```
 
-## Troubleshooting
+## Troubleshooting para Plano Gratuito
 
-### "GitHub Actions is not permitted to create or approve pull requests"
+### Release Please não cria PRs?
 
-- Go to Settings → Actions → General → Workflow permissions
-- Enable "Allow GitHub Actions to create and approve pull requests"
+**Solução passo a passo:**
+1. Settings → Actions → General
+2. Workflow permissions → Read and write permissions
+3. ✅ Allow GitHub Actions to create and approve pull requests
+4. Save
+5. Re-run workflow no Actions tab
 
-### Release Please not creating PRs
+### Não consigo aprovar meu próprio PR?
 
-- Check if conventional commits are being used
-- Verify workflow permissions are correct
-- Check GitHub Actions logs for errors
+**Soluções:**
+- Remova requirement de aprovação em branch protection
+- OU adicione um colaborador (pode ser um amigo)
+- OU faça merge direto se você for admin
 
-### NPM publish failing
+### NPM publish falha?
 
-- Verify NPM_TOKEN is set correctly
-- Check token has Automation permissions
-- Ensure package.json version is correct
+**Checklist:**
+1. Token NPM está em Secrets? (`NPM_TOKEN`)
+2. Token é do tipo "Automation"?
+3. Package name está disponível no npm?
+4. Version no package.json está correta?
