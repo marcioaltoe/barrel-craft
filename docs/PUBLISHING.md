@@ -165,6 +165,17 @@ npm view barrel-craft version
 3. Ensure version hasn't been published before
 4. Check package name availability on npm
 
+### npm 24-Hour Republish Restriction
+
+If you recently unpublished a package from npm, you must wait 24 hours before republishing with the same package name. This is an npm security policy to prevent abuse.
+
+**Error message:** `403 Forbidden - barrel-craft cannot be republished until 24 hours have passed`
+
+**Solution:**
+- Wait 24 hours from the unpublish time
+- The package can be republished after approximately 2025-08-21 at the same time you unpublished
+- Once the waiting period passes, simply push a new tag or run the release script again
+
 ## Development Workflow
 
 1. Create feature branch
