@@ -2,8 +2,8 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { glob } from 'glob'
 import { minimatch } from 'minimatch'
-import type { BarrelConfig, BarrelGenerationResult, FileConfig, FileInfo } from '../types'
-import { findConfigFile, loadConfigFile } from '../utils/config-loader'
+import type { BarrelConfig, BarrelGenerationResult, FileConfig, FileInfo } from '../types/index.js'
+import { findConfigFile, loadConfigFile } from '../utils/config-loader.js'
 
 export class BarrelGenerator {
   private fileConfig?: FileConfig

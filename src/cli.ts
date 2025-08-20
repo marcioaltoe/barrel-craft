@@ -3,8 +3,8 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { Command } from 'commander'
-import { BarrelGenerator } from './core/barrel-generator'
-import type { BarrelConfig, FileConfig } from './types'
+import { BarrelGenerator } from './core/barrel-generator.js'
+import type { BarrelConfig, FileConfig } from './types/index.js'
 
 const program = new Command()
 
@@ -128,8 +128,8 @@ async function checkFileExists(filePath: string): Promise<boolean> {
 
 async function promptOverwrite(configPath: string): Promise<boolean> {
   // Simple prompt for overwrite confirmation
-  const readline = require('node:readline')
-  const rl = readline.createInterface({
+  const { createInterface } = await import('node:readline')
+  const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
   })
