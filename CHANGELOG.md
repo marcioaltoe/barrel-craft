@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/marcioaltoe/barrel-craft/compare/v1.0.1...v1.0.2) (2025-08-20)
+
+
+### Bug Fixes
+
+* **build:** ensure ESM output is correctly generated ([7730154](https://github.com/marcioaltoe/barrel-craft/commit/7730154f3e4cfc3b045e2bc2d71f91167e5a0350))
+
 ## [1.0.1](https://github.com/marcioaltoe/barrel-craft/compare/v1.0.0...v1.0.1) (2025-08-20)
 
 
