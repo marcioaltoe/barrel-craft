@@ -4,9 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
-    # Run on all PRs, not just those targeting main
-    # This allows Release Please PRs to be validated
-    types: [opened, synchronize, reopened, edited]
+    # Run on ALL pull requests regardless of target branch
+    # This is crucial for Release Please PRs to work
   workflow_dispatch: # Allow manual trigger
 
 jobs:
