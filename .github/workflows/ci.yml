@@ -6,7 +6,8 @@ on:
   pull_request:
     # Run on all PRs, not just those targeting main
     # This allows Release Please PRs to be validated
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, edited]
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   test:
