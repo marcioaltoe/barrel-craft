@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import type { FileConfig } from '../types'
-import { expandVariablePatterns } from './pattern-expander'
+import type { FileConfig } from '../types/index.js'
+import { expandVariablePatterns } from './pattern-expander.js'
 
 const CONFIG_FILES = [
   'barrel-craft.json',
