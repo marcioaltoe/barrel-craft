@@ -20,75 +20,105 @@ This project uses GitHub Actions to automate the publishing process to npm.
 4. Name: `NPM_TOKEN`
 5. Value: Paste your npm token
 
-## Publishing Methods
+## Publishing Process
 
-### Method 1: Automatic Release (Recommended)
+### Automatic Publishing (via Scripts)
 
-Uses [Release Please](https://github.com/googleapis/release-please) to automate versioning and publishing.
+The easiest way to publish a new version:
 
-1. Merge PRs to `main` branch
-2. Release Please creates a PR with version bumps
-3. Merge the Release PR
-4. Package is automatically published to npm
+```bash
+# For patch release (1.0.x) - bug fixes
+npm run release:patch
 
-### Method 2: Manual Release via Tags
+# For minor release (1.x.0) - new features
+npm run release:minor
 
-1. Update version in `package.json`
-2. Commit and push to main
-3. Create and push a tag:
+# For major release (x.0.0) - breaking changes
+npm run release:major
+```
+
+These scripts will:
+1. Run tests
+2. Build the project
+3. Bump the version in package.json
+4. Create a git commit and tag
+5. Push to GitHub
+6. GitHub Actions will automatically publish to npm
+
+### Manual Publishing Process
+
+1. **Update version manually:**
    ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
+   npm version patch  # or minor, or major
    ```
-4. Package is automatically published to npm
 
-### Method 3: GitHub Release
+2. **Create and push tag:**
+   ```bash
+   git push origin main
+   git push origin --tags
+   ```
 
-1. Go to Releases page
-2. Create a new release
-3. Create a new tag (e.g., `v0.1.0`)
-4. Publish release
-5. Package is automatically published to npm
+3. **GitHub Actions automatically publishes when detecting a `v*` tag**
+
+### Direct GitHub Release
+
+1. Go to repository Releases page
+2. Click "Create a new release"
+3. Create a new tag (e.g., `v1.0.4`)
+4. Write release notes
+5. Publish release
+6. GitHub Actions automatically publishes to npm
 
 ## Version Management
 
 Follow [Semantic Versioning](https://semver.org/):
 
-- MAJOR: Breaking changes
-- MINOR: New features (backwards compatible)
-- PATCH: Bug fixes
+- **MAJOR** (x.0.0): Breaking changes
+- **MINOR** (1.x.0): New features (backwards compatible)
+- **PATCH** (1.0.x): Bug fixes
 
 ## CI/CD Pipeline
 
-The CI workflow runs on:
+### Continuous Integration (CI)
 
-- Every push to `main`
-- Every pull request
-
-It performs:
-
+Runs on every push and pull request:
 - Type checking
 - Linting
-- Testing
-- Building
+- Testing on Node.js 18, 20, 22
+- Build verification
 - Package installation test
 
-## Local Publishing (Testing)
+### Continuous Deployment (CD)
 
-To test the publish process locally:
+Triggers on tag push (`v*`):
+- Runs all tests
+- Builds the package
+- Publishes to npm registry
+
+## Local Testing
+
+### Test the package locally before publishing:
 
 ```bash
 # Build and create package
 bun run build
 npm pack
 
-# Test global installation
+# Test local installation
 npm install -g ./barrel-craft-*.tgz
 
-# Verify installation
+# Verify it works
 barrel-craft --version
+barrel-craft init
 
-# Dry run publish (doesn't actually publish)
+# Cleanup
+npm uninstall -g barrel-craft
+rm barrel-craft-*.tgz
+```
+
+### Dry run publish (doesn't actually publish):
+
+```bash
 npm publish --dry-run
 ```
 
@@ -102,11 +132,46 @@ npm publish --dry-run
 
 ### Build Failures
 
-- Run `bun run build` locally to check for errors
-- Ensure all tests pass: `bun run test`
-- Check TypeScript compilation: `bun run type-check`
+```bash
+# Check build locally
+bun run build
+
+# Run all tests
+bun run test
+
+# Check TypeScript
+bun run type-check
+
+# Check linting
+bun run lint
+```
 
 ### Version Conflicts
 
-- Check npm for existing versions: `npm view barrel-craft versions`
-- Ensure version in `package.json` is higher than latest published
+```bash
+# Check existing versions on npm
+npm view barrel-craft versions
+
+# Check current version
+npm view barrel-craft version
+
+# Ensure your version is higher than latest
+```
+
+### Publishing Fails
+
+1. Check GitHub Actions logs for errors
+2. Verify NPM_TOKEN is set correctly
+3. Ensure version hasn't been published before
+4. Check package name availability on npm
+
+## Development Workflow
+
+1. Create feature branch
+2. Make changes
+3. Run tests locally: `bun test`
+4. Create PR
+5. Wait for CI to pass
+6. Merge to main
+7. Run release script: `npm run release:patch`
+8. Package automatically publishes to npm
