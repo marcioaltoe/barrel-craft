@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/marcioaltoe/barrel-craft/compare/v1.0.0...v1.0.1) (2025-08-20)
+
+
+### Bug Fixes
+
+* **cli:** read version from package.json dynamically ([3826577](https://github.com/marcioaltoe/barrel-craft/commit/3826577332b1c33e0e67a9627bcd704c0d942ad0))
+
 ## 1.0.0 (2025-08-20)
 
 
