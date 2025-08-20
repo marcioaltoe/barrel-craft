@@ -2,16 +2,23 @@
 
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { Command } from 'commander'
 import { BarrelGenerator } from './core/barrel-generator.js'
 import type { BarrelConfig, FileConfig } from './types/index.js'
+
+// Read version from package.json
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const packageJson = JSON.parse(
+  await fs.readFile(path.join(__dirname, '..', 'package.json'), 'utf-8')
+)
 
 const program = new Command()
 
 program
   .name('barrel-craft')
   .description('Generate clean and consistent barrel files for TypeScript and React projects')
-  .version('0.1.0', '-v, --version', 'output the version number')
+  .version(packageJson.version, '-v, --version', 'output the version number')
 
 program
   .argument('[directory]', 'directory to generate barrel files for', '.')
