@@ -12,7 +12,6 @@
   "bugs": {
     "url": "https://github.com/marcioaltoe/barrel-craft/issues"
   },
-  "type": "module",
   "main": "dist/index.js",
   "bin": {
     "barrel": "dist/cli.js",
@@ -35,6 +34,10 @@
     "package": "npm pack",
     "package:test": "bun run build && npm pack",
     "prepublishOnly": "bun run build && bun run test && bun run lint",
+    "release": "./scripts/release.sh",
+    "release:patch": "./scripts/release.sh patch",
+    "release:minor": "./scripts/release.sh minor",
+    "release:major": "./scripts/release.sh major",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:coverage:ui": "vitest --ui --coverage",

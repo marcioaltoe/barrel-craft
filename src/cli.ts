@@ -2,16 +2,12 @@
 
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { Command } from 'commander'
-import { BarrelGenerator } from './core/barrel-generator.js'
-import type { BarrelConfig, FileConfig } from './types/index.js'
+import { BarrelGenerator } from './core/barrel-generator'
+import type { BarrelConfig, FileConfig } from './types'
 
 // Read version from package.json
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const packageJson = JSON.parse(
-  await fs.readFile(path.join(__dirname, '..', 'package.json'), 'utf-8')
-)
+const packageJson = require('../package.json')
 
 const program = new Command()
 
@@ -135,8 +131,8 @@ async function checkFileExists(filePath: string): Promise<boolean> {
 
 async function promptOverwrite(configPath: string): Promise<boolean> {
   // Simple prompt for overwrite confirmation
-  const { createInterface } = await import('node:readline')
-  const rl = createInterface({
+  const readline = require('node:readline')
+  const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   })
